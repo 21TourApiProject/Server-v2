@@ -1,6 +1,7 @@
 package com.server.tourApiProject.user;
 
 import com.server.tourApiProject.bigPost.post.Post;
+import com.server.tourApiProject.fcm.FcmService;
 import com.server.tourApiProject.myWish.MyWishRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 @Slf4j
@@ -40,6 +42,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final MyWishRepository myWishRepository;
     private final UserPasswordService userPasswordService;
+    private final FcmService fcmService;
     private final PasswordEncoder bCryptPasswordEncoder;
     private final JavaMailSender javaMailSender;
 
@@ -375,5 +378,9 @@ public class UserService {
                 userRepository.save(user);
             }
         }
+    }
+
+    public Map<String, String> getNickName(Long userId) {
+        return Map.of("nickName", userRepository.findById(userId).get().getNickName());
     }
 }

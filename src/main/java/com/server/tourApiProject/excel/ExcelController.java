@@ -46,6 +46,10 @@ import com.server.tourApiProject.weather.description.Description;
 import com.server.tourApiProject.weather.description.DescriptionRepository;
 import com.server.tourApiProject.weather.observation.WeatherObservation;
 import com.server.tourApiProject.weather.observation.WeatherObservationRepository;
+import java.text.DecimalFormat;
+
+import com.server.tourApiProject.weather.observationalFit.ObservationalFit;
+import com.server.tourApiProject.weather.observationalFit.ObservationalFitRepository;
 import lombok.AllArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -101,6 +105,7 @@ public class ExcelController {
     private final WeatherAreaRepository weatherAreaRepository;
     private final WeatherObservationRepository weatherObservationRepository;
     private final DescriptionRepository descriptionRepository;
+    private final ObservationalFitRepository observationalFitRepository;
     private final StarFeatureRepository starFeatureRepository;
     private final StarHashTagRepository starHashTagRepository;
     private final PostHashTagRepository postHashTagRepository;
@@ -441,6 +446,17 @@ public class ExcelController {
             data.setSummary(row.getCell(10).getStringCellValue());
             if (data.getSummary().equals("null"))
                 data.setSummary(null);
+            data.setRightAsc((float) row.getCell(11).getNumericCellValue());
+            if(data.getRightAsc().equals(0f))
+                data.setRightAsc(null);
+            data.setDeclination((float)row.getCell(12).getNumericCellValue());
+            Float rawValue = data.getDeclination();
+            DecimalFormat decimalFormat = new DecimalFormat("#.##");
+            float roundedValue = Float.parseFloat(decimalFormat.format(rawValue));
+            data.setDeclination(roundedValue);
+            if (data.getDeclination().equals(0f)) {
+                data.setDeclination(null);
+            }
             constellationRepository.save(data);
         }
         System.out.println("엑셀 완료");
@@ -965,6 +981,34 @@ public class ExcelController {
                     .main(row.getCell(1).getStringCellValue())
                     .description(row.getCell(2).getStringCellValue())
                     .result(row.getCell(3).getStringCellValue())
+                    .build());
+        }
+        System.out.println("엑셀 완료");
+        return "excel";
+    }
+
+    @PostMapping("/excel/weather/observationalFit/read")
+    public String readWeatherObservationalFitExcel(@RequestParam("file") MultipartFile file, Model model)
+            throws IOException {
+        String extension = FilenameUtils.getExtension(file.getOriginalFilename());
+        if (!extension.equals("xlsx") && !extension.equals("xls")) {
+            throw new IOException("엑셀파일만 업로드 해주세요.");
+        }
+        Workbook workbook = null;
+
+        if (extension.equals("xlsx")) {
+            workbook = new XSSFWorkbook(file.getInputStream());
+        } else if (extension.equals("xls")) {
+            workbook = new HSSFWorkbook(file.getInputStream());
+        }
+
+        Sheet worksheet = workbook.getSheetAt(0);
+        for (int i = 1; i < worksheet.getPhysicalNumberOfRows(); i++) {
+            Row row = worksheet.getRow(i);
+            observationalFitRepository.save(ObservationalFit.builder()
+                    .bestObservationalFit(row.getCell(1).getNumericCellValue())
+                    .date("2024-01-02")
+                    .observationCode((long) row.getCell(3).getNumericCellValue())
                     .build());
         }
         System.out.println("엑셀 완료");

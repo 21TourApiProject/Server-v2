@@ -1,11 +1,11 @@
 package com.server.tourApiProject.alarm;
 
+import java.util.ArrayList;
+import java.util.List;
+import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import javax.transaction.Transactional;
-import java.util.List;
 @Slf4j
 @Service
 @Transactional
@@ -25,14 +25,23 @@ import java.util.List;
  */
 public class AlarmService {
     private final AlarmRepository alarmRepository;
-
     /**
      * description: 알림 목록 가져오는 메소드.
      *
      * @return the all alarm
      */
-    public List<Alarm> getAllAlarm() {
-        return alarmRepository.findAll();
+    public List<Alarm> getAllAlarm(Long userId) {
+        List<Alarm> result = new ArrayList<>();
+        List<Alarm> alarmList= alarmRepository.findAll();
+        for(Alarm alarm:alarmList){
+            if(alarm.getUserId()==null){
+                result.add(alarm);
+            }else if(alarm.getUserId().equals(userId)){
+                result.add(alarm);
+            }
+        }
+
+        return result;
     }
 
     /**

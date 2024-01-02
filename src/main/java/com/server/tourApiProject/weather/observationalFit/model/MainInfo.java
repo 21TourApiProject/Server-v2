@@ -13,13 +13,9 @@ import lombok.Setter;
 public class MainInfo {
 
     @JsonProperty
-    public String comment; // ex. 행운동, 별 보기 괜찮은 날이네요!
+    public String location; // ex. 행운동
     @JsonProperty
-    public String bestObservationalFit; // ex. 관측 적합도 ~70%
+    public String comment; // ex. 오늘 날씨는 맑음, 기온은 최저 nnº, 최고 NNº에요. 월령이 낮고, 구름도 적어 별 보기 좋은 날이네요. 눈 소식에 유의하세요!
     @JsonProperty
-    public String bestTime; // ex. 추천 관측시간 23시
-    @JsonProperty
-    public String mainEffect; // ex. 높은 광공해(이)가 관측을 방해해요
-    @JsonProperty
-    public Long areaId;
+    public Long regionId;
 }

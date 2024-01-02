@@ -2,18 +2,20 @@ package com.server.tourApiProject.observation;
 
 import com.server.tourApiProject.hashTag.HashTag;
 import com.server.tourApiProject.hashTag.HashTagRepository;
-import com.server.tourApiProject.myWish.MyWishParams01;
-import com.server.tourApiProject.observation.observeImage.ObserveImage;
-import com.server.tourApiProject.observation.observeImage.ObserveImageRepository;
-import com.server.tourApiProject.search.SearchParams1;
+import com.server.tourApiProject.observation.model.ObservationParams;
+import com.server.tourApiProject.observation.model.ObservationSimpleParams;
 import com.server.tourApiProject.observation.observeFee.ObserveFee;
 import com.server.tourApiProject.observation.observeFee.ObserveFeeRepository;
 import com.server.tourApiProject.observation.observeHashTag.ObserveHashTag;
 import com.server.tourApiProject.observation.observeHashTag.ObserveHashTagParams;
 import com.server.tourApiProject.observation.observeHashTag.ObserveHashTagRepository;
+import com.server.tourApiProject.observation.observeImage.ObserveImage;
+import com.server.tourApiProject.observation.observeImage.ObserveImageRepository;
 import com.server.tourApiProject.search.Filter;
-import com.server.tourApiProject.touristPoint.touristData.TouristData;
-import com.server.tourApiProject.touristPoint.touristDataHashTag.TouristDataHashTag;
+import com.server.tourApiProject.search.SearchParams1;
+import com.server.tourApiProject.weather.area.WeatherArea;
+import com.server.tourApiProject.weather.area.WeatherAreaRepository;
+import com.server.tourApiProject.weather.observationalFit.ObservationalFitRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,9 +24,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
+import java.util.Optional;
 
 /**
 * @className : ObservationService.java
@@ -48,6 +52,8 @@ public class ObservationServiceImpl implements ObservationService {
     private final HashTagRepository hashTagRepository;
     private final ObserveFeeRepository observeFeeRepository;
     private final ObserveImageRepository observeImageRepository;
+    private final ObservationalFitRepository observationalFitRepository;
+    private final WeatherAreaRepository weatherAreaRepository;
 
     public List<Observation> getAllObservation() {
         return observationRepository.findAll();
@@ -107,7 +113,7 @@ public class ObservationServiceImpl implements ObservationService {
 
         List<SearchParams1> resultParams = new ArrayList<>();   //최종결과 param 리스트
         Page<Observation> searchResult; //필터+검색어 결과 리스트
-
+        long start = System.currentTimeMillis();
         //Specification으로 조건 동적생성
         Specification<Observation> spec = Specification.where(ObservationSpecification.likeSearchKeyAndInFilter(searchKey, hashTagIdList, areaCodeList));
 
@@ -161,6 +167,8 @@ public class ObservationServiceImpl implements ObservationService {
 
             resultParams.add(searchParams1);
         }
+        long end = System.currentTimeMillis();
+        System.out.println("time is "+(end-start) );
         return resultParams;
     }
 
@@ -179,9 +187,42 @@ public class ObservationServiceImpl implements ObservationService {
         return observationRepository.count(spec);
     }
 
+    @Override
+    public List<ObservationSimpleParams> getObservationSimpleList(List<Long> observationIds) {
+        String stringDate = getDateForFit();
+        log.info("[Observation] get simple list. date = {}", stringDate);
+        return observationRepository.findObservationSimpleByIdList(observationIds, stringDate);
+    }
 
+    @Override
+    public List<ObservationSimpleParams> getBestFitObservationList() {
+        String stringDate = getDateForFit();
+        List<Long> observationIds = observationalFitRepository.getObservationIdsByBestFit(stringDate);
+        return observationRepository.findObservationSimpleByIdList(observationIds, stringDate);
+    }
 
-//    @Override
+    private String getDateForFit() {
+        LocalDateTime now = LocalDateTime.now();
+        // 아침 7시에 관측적합도 최신화 - GMT기준인지 물어보기
+        LocalDateTime latestDate;
+        if (now.getHour() < 8) {
+            latestDate = now.minusDays(1);
+        } else {
+            latestDate = now;
+        }
+        String stringDate =latestDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        return stringDate;
+    }
+
+    @Override
+    public List<ObservationSimpleParams> getNearObservationIds(Long areaId, int size) {
+        WeatherArea weatherArea = weatherAreaRepository.findById(areaId).get();
+        List<Long> nearObservationIds = observationRepository.findNearObservationIds(weatherArea.getLatitude(), weatherArea.getLongitude(), size );
+
+        return observationRepository.findObservationSimpleByIdList(nearObservationIds, getDateForFit());
+    }
+
+    //    @Override
 //    public List<SearchParams1> getObservationWithFilter(Filter filter, String searchKey) {
 //        List<Long> areaCodeList = filter.getAreaCodeList();
 //        List<Long> hashTagIdList= filter.getHashTagIdList();    //필터 해쉬태그 리스트

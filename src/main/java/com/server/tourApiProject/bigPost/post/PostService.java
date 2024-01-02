@@ -220,6 +220,16 @@ public class PostService {
     }
 
     /**
+     * description: 관심지역 페이지에서 관측지 관련 게시물 가져오는 메소드.
+     *
+     * @param observationId - the observation id, size - size of list
+     * @return the relate post
+     */
+    public List<PostContentsParams> getObservationRelatePostWithSize(int size, Long observationId) {
+        return postRepository.getObservationPostWithSize(size, observationId);
+    }
+
+    /**
      * description: 메인 페이지 게시물 리스트 가져오는 메소드.
      *
      * @return the list
@@ -366,6 +376,17 @@ public class PostService {
         }
         return result;
     }
+
+    /**
+     * description: 최근 게시글 간단정보                                 를 size만큼 가져온다.
+     *
+     * @param size    size
+     * @return List<PostParams6>
+     */
+    public List<PostContentsParams>getLatestPostsWithSize(int size){
+        return postRepository.getLatestContentsWithSize(size);
+    }
+
     class OrderComparator implements Comparator<Long> {
         @Override
         public int compare(Long o1, Long o2) {

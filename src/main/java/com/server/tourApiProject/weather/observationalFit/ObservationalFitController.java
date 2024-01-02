@@ -1,13 +1,17 @@
 package com.server.tourApiProject.weather.observationalFit;
 
+import com.server.tourApiProject.weather.area.NearestAreaDTO;
 import com.server.tourApiProject.weather.observationalFit.model.AreaTimeDTO;
 import com.server.tourApiProject.weather.observationalFit.model.MainInfo;
 import com.server.tourApiProject.weather.observationalFit.model.WeatherInfo;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Api(tags = {"7.3 날씨 - 관측적합도"})
@@ -37,12 +41,18 @@ public class ObservationalFitController {
     }
 
     /**
-     * 앱 메인 페이지 현 위치 날씨 정보 제공
+     * 앱 메인 페이지 인근 지역 날씨 제공
+     * input : 시군구 (서대문구, 세종), 위도, 경도
      */
-    @PostMapping("/observationalFit/mainPage")
-    public Mono<MainInfo> getMainInfo(@RequestBody AreaTimeDTO areaTime) {
-        return observationalFitService.getMainInfo(areaTime);
+    @ApiOperation(value = "현위치 날씨 조회", notes = "위도/경도를 기준으로 가장 가까운 읍면동을 찾고, 해당 지역의 날씨를 구한다")
+    @PostMapping(value = "observationalFit/nearestArea")
+    public Mono<MainInfo> getNearestAreaWeatherInfo(@RequestBody NearestAreaDTO nearestAreaDTO) {
+        return observationalFitService.getNearestAreaWeatherInfo(nearestAreaDTO);
     }
 
-
+    @ApiOperation(value = "현재 시간 조회")
+    @GetMapping(value = "time")
+    public LocalDateTime getCurrentTime() {
+        return LocalDateTime.now();
+    }
 }

@@ -26,4 +26,6 @@ public class WeatherLocationDTO {
     private Double latitude;
 
     private Double longitude;
+
+    private Long observationalFit;
 }

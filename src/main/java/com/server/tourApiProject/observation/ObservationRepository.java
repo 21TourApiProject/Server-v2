@@ -1,13 +1,13 @@
 package com.server.tourApiProject.observation;
 
-import org.apache.ibatis.annotations.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface ObservationRepository extends JpaRepository<Observation, Long>, JpaSpecificationExecutor<Observation> {
+public interface ObservationRepository extends JpaRepository<Observation, Long>, JpaSpecificationExecutor<Observation>, ObservationRepositoryCustom {
 
     /**
      * 쿼리명: findByObservationName
@@ -34,7 +34,10 @@ public interface ObservationRepository extends JpaRepository<Observation, Long>,
     List<Observation> findByObservationNameContainingOrOutlineContaining(String observationName, String outline);
 //    반환형 findBy제목ContainingOr개요또는내용Containing(String 제목검색어, String 내용검색어);
 
+    @Query(value = "select o.observation_id " +
+            "from observation o  " +
+            "ORDER BY (6371 * acos(cos(radians(:latitude)) * cos(radians(o.latitude)) * cos(radians(o.longitude) - radians(:longitude)) + sin(radians(:latitude)) * sin(radians(o.latitude)))) " +
+            "LIMIT :size", nativeQuery = true)
+    List<Long> findNearObservationIds(@Param("latitude") Double latitude, @Param("longitude") Double longitude, @Param("size") int size);
 
-
-//
 }
